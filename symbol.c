@@ -54,7 +54,7 @@ AtomId symbol_lookup(Jay *jay, StringId string) {
     AtomId nameCar = atom_car(jay, names);
     AtomId valueCar = atom_car(jay, values);
     if (nameCar.id != jay->frameOfReference.id &&
-        string.id == atom_string(jay, nameCar).id) {
+        string.id == atom_id(jay, nameCar).id) {
       return valueCar;
     }
     names = atom_cdr(jay, names);

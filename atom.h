@@ -22,6 +22,7 @@ void atom_car_set(Jay*, AtomId, AtomId);
 AtomId atom_cdr(Jay*, AtomId);
 void atom_cdr_set(Jay*, AtomId, AtomId);
 StringId atom_string(Jay*, AtomId);
+StringId atom_id(Jay*, AtomId);
 double atom_number(Jay*, AtomId);
 BuiltinFn atom_builtin(Jay*, AtomId);
 AtomId atom_param_names(Jay*, AtomId);

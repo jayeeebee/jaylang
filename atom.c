@@ -13,6 +13,7 @@ typedef struct Atom {
       AtomId cdr;
     };
     StringId string;
+    StringId id;
     double number;
     BuiltinFn builtinFn;
     struct {
@@ -64,39 +65,60 @@ int is_nil(Jay *jay, AtomId atom) {
   return jay->nil.id == atom.id;
 }
 
+static void _check_type(Jay *jay, AtomId atom, AtomType expected) {
+  AtomType found = atom_type(jay, atom);
+  if (found != expected) {
+    LOG_FATAL("atom has type of %s instead of type %s", atomTypeNames[found], atomTypeNames[expected]);
+  }
+}
+
 AtomId atom_car(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_CONS);
   return _atom(jay, atom)->car;
 }
 
 void atom_car_set(Jay *jay, AtomId atom, AtomId car) {
+  _check_type(jay, atom, ATOM_CONS);
   _atom(jay, atom)->car = car;
 }
 
 AtomId atom_cdr(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_CONS);
   return _atom(jay, atom)->cdr;
 }
 
 void atom_cdr_set(Jay *jay, AtomId atom, AtomId cdr) {
+  _check_type(jay, atom, ATOM_CONS);
   _atom(jay, atom)->cdr = cdr;
 }
 
 StringId atom_string(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_STRING);
   return _atom(jay, atom)->string;
 }
 
+StringId atom_id(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_ID);
+  return _atom(jay, atom)->id;
+}
+
 double atom_number(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_NUMBER);
   return _atom(jay, atom)->number;
 }
 
 BuiltinFn atom_builtin(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_BUILTIN);
   return _atom(jay, atom)->builtinFn;
 }
 
 AtomId atom_param_names(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_FNC);
   return _atom(jay, atom)->paramNames;
 }
 
 AtomId atom_instructions(Jay *jay, AtomId atom) {
+  _check_type(jay, atom, ATOM_FNC);
   return _atom(jay, atom)->instructions;
 }
 
@@ -120,8 +142,8 @@ AtomId atom_intern_string(Jay *jay, StringId string) {
   return _atom_intern(jay, atom);
 }
 
-AtomId atom_intern_id(Jay *jay, StringId string) {
-  Atom atom = {.type = ATOM_ID, .string = string};
+AtomId atom_intern_id(Jay *jay, StringId id) {
+  Atom atom = {.type = ATOM_ID, .id = id};
   return _atom_intern(jay, atom);
 }
 

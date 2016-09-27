@@ -84,7 +84,7 @@ AtomId cond(Jay *jay, AtomId args) {
 }
 
 AtomId set(Jay *jay, AtomId args) {
-  StringId name = atom_string(jay, atom_car(jay, args));
+  StringId name = atom_id(jay, atom_car(jay, args));
   AtomId val = eval(jay, atom_car(jay, atom_cdr(jay, args)));
   symbol_intern(jay, name, val);
   return val;
@@ -107,7 +107,7 @@ AtomId defnc(Jay *jay, AtomId atom) {
   AtomId paramNames = atom_car(jay, atom_cdr(jay, atom));
   AtomId instructions = atom_cdr(jay, atom_cdr(jay, atom));
   AtomId fnc = atom_intern_fnc(jay, paramNames, instructions);
-  symbol_intern(jay, atom_string(jay, fncName), fnc);
+  symbol_intern(jay, atom_id(jay, fncName), fnc);
   return fnc;
 }
 
@@ -119,7 +119,7 @@ static AtomId _eval_fnc(Jay *jay, AtomId car, AtomId cdr) {
   AtomId paramNames = atom_param_names(jay, car);
   AtomId instructions = atom_instructions(jay, car);
   while (!is_nil(jay, cdr)) {
-    StringId paramName = atom_string(jay, atom_car(jay, paramNames));
+    StringId paramName = atom_id(jay, atom_car(jay, paramNames));
     AtomId paramVal = eval(jay, atom_car(jay, cdr));
     symbol_intern(jay, paramName, paramVal);
     paramNames = atom_cdr(jay, paramNames);
@@ -158,7 +158,7 @@ AtomId eval(Jay *jay, AtomId atom) {
   case ATOM_CONS:
     return _eval_list(jay, atom_car(jay, atom), atom_cdr(jay, atom));
   case ATOM_ID:
-    return symbol_lookup(jay, atom_string(jay, atom));
+    return symbol_lookup(jay, atom_id(jay, atom));
   case ATOM_FNC:
   case ATOM_BUILTIN:
   case ATOM_STRING:
@@ -220,12 +220,13 @@ static void _print(Jay *jay, AtomId atom) {
     fputc(')', jay->out);
     break;
   case ATOM_STRING:
-  case ATOM_ID:
     fputs(string_chars(jay, atom_string(jay, atom)), jay->out);
+    break;
+  case ATOM_ID:
+    fputs(string_chars(jay, atom_id(jay, atom)), jay->out);
     break;
   case ATOM_NUMBER:
     number = atom_number(jay, atom);
-    //if ((number - (double)(long) number) == 0) {
     if (number == (double)(long long) number)  {
       fprintf(jay->out, "%lld", (long long) number);
     } else {
