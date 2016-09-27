@@ -1,2 +1,2 @@
 # jaylang
-Hobby project implementation of a lisp like language.
+Hobby implementation of a lisp like language.
