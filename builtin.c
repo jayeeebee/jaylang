@@ -22,7 +22,9 @@ int builtins_init(Jay *jay) {
   _init(jay, "*", mul);
   _init(jay, "/", divide);
   _init(jay, "==", equal);
-  _init(jay, "if", cond);
+  _init(jay, "if", ifFn);
+  _init(jay, "or", orFn);
+  _init(jay, "and", andFn);
   _init(jay, "set", set);
   _init(jay, "quit", quit);
   _init(jay, "defnc", defnc);
@@ -70,7 +72,7 @@ AtomId quote(Jay *jay, AtomId args) {
   return args;
 }
 
-AtomId cond(Jay *jay, AtomId args) {
+AtomId ifFn(Jay *jay, AtomId args) {
   AtomId found = eval(jay, atom_car(jay, args));
   AtomId out = atom_cdr(jay, args);
   if (is_nil(jay, found)) {
@@ -81,6 +83,28 @@ AtomId cond(Jay *jay, AtomId args) {
   } else {
     return eval(jay, atom_car(jay, out));
   }
+}
+
+AtomId orFn(Jay *jay, AtomId args) {
+  while (!is_nil(jay, args)) {
+    AtomId found = eval(jay, atom_car(jay, args));
+    if (!is_nil(jay, found)) {
+      return jay->t;
+    }
+    args = atom_cdr(jay, args);
+  }
+  return jay->nil;
+}
+
+AtomId andFn(Jay *jay, AtomId args) {
+  while (!is_nil(jay, args)) {
+    AtomId found = eval(jay, atom_car(jay, args));
+    if (is_nil(jay, found)) {
+      return jay->nil;
+    }
+    args = atom_cdr(jay, args);
+  }
+  return jay->t;
 }
 
 AtomId set(Jay *jay, AtomId args) {
