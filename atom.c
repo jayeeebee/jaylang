@@ -1,5 +1,6 @@
 #include "atom.h"
 #include "log.h"
+#include "symbol.h"
 
 const char *atomTypeNames[] = {
   "NIL", "CONS", "STRING", "NUMBER", "ID", "BUILTIN", "FNC"
@@ -21,6 +22,7 @@ typedef struct Atom {
       AtomId instructions;
     };
   };
+  int age;
 } Atom;
 
 static Atom* _atom(Jay *jay, AtomId atom) {
@@ -28,6 +30,8 @@ static Atom* _atom(Jay *jay, AtomId atom) {
 }
 
 int atoms_init(Jay *jay) {
+  jay->age = 0;
+
   // atoms
   jay->atoms = malloc(sizeof(Atom) * NUM_INITIAL_ATOMS);
   if (!jay->atoms) {
@@ -122,10 +126,30 @@ AtomId atom_instructions(Jay *jay, AtomId atom) {
   return _atom(jay, atom)->instructions;
 }
 
+void atom_age(Jay *jay, AtomId atom) {
+  _atom(jay, atom)->age = jay->age;
+}
+
+static void _gc(Jay *jay) {
+  symbol_age(jay);
+  for (size_t i = 1; i < jay->atomsCount; i++) {
+    if (jay->atoms[i].age < jay->age) {
+      jay->atoms[i].type = ATOM_CONS;
+      jay->atoms[i].cdr = jay->unusedAtoms;
+      jay->unusedAtoms = (AtomId) {.id = i};
+    }
+  }
+}
+
 static AtomId _atom_intern(Jay *jay, Atom atom) {
+  atom.age = jay->age;
   AtomId out = jay->unusedAtoms;
   if (is_nil(jay, out)) {
-    LOG_FATAL("out of things to intern");
+    _gc(jay);
+    out = jay->unusedAtoms;
+    if (is_nil(jay, out)) {
+      LOG_FATAL("gc unable to free any space");
+    }
   }
   jay->unusedAtoms = atom_cdr(jay, out);
   jay->atoms[out.id] = atom;

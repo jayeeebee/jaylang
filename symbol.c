@@ -36,15 +36,15 @@ void stack_pop(Jay *jay) {
 }
 
 void symbol_intern(Jay *jay, StringId string, AtomId atom) {
-  AtomId cons = atom_intern_cons(jay);
-  atom_car_set(jay, cons, atom_intern_id(jay, string));
-  atom_cdr_set(jay, cons, jay->symbolNames);
-  jay->symbolNames = cons;
+  AtomId names = atom_intern_cons(jay);
+  atom_car_set(jay, names, atom_intern_id(jay, string));
+  atom_cdr_set(jay, names, jay->symbolNames);
+  jay->symbolNames = names;
   
-  cons = atom_intern_cons(jay);
-  atom_car_set(jay, cons, atom);
-  atom_cdr_set(jay, cons, jay->symbolValues);
-  jay->symbolValues = cons;
+  AtomId values = atom_intern_cons(jay);
+  atom_car_set(jay, values, atom);
+  atom_cdr_set(jay, values, jay->symbolValues);
+  jay->symbolValues = values;
 }
 
 AtomId symbol_lookup(Jay *jay, StringId string) {
@@ -61,4 +61,40 @@ AtomId symbol_lookup(Jay *jay, StringId string) {
     values = atom_cdr(jay, values);
   }
   return jay->nil;
+}
+
+static void _symbol_age(Jay *jay, AtomId atom) {
+  atom_age(jay, atom);
+  AtomType type = atom_type(jay, atom);
+  switch (type) {
+  case ATOM_FNC:
+    _symbol_age(jay, atom_param_names(jay, atom));
+    _symbol_age(jay, atom_instructions(jay, atom));
+    break;
+  case ATOM_CONS:
+    _symbol_age(jay, atom_car(jay, atom));
+    _symbol_age(jay, atom_cdr(jay, atom));
+    break;
+  case ATOM_NUMBER:
+  case ATOM_STRING:
+  case ATOM_NIL:
+  case ATOM_ID:
+  case ATOM_BUILTIN:
+    break;
+  default:
+    LOG_FATAL("unknown atom type %s", atomTypeNames[type]); 
+  }
+}
+
+void symbol_age(Jay *jay) {
+  AtomId names = jay->symbolNames;
+  AtomId values = jay->symbolValues;
+  while (!is_nil(jay, names)) {
+    _symbol_age(jay, names);
+    _symbol_age(jay, values);
+    names = atom_cdr(jay, names);
+    if (!is_nil(jay, values)) {
+      values = atom_cdr(jay, values);
+    }
+  }
 }

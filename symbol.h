@@ -11,5 +11,6 @@ void stack_pop(Jay*);
 
 void symbol_intern(Jay*, StringId, AtomId);
 AtomId symbol_lookup(Jay*, StringId);
+void symbol_age(Jay*);
 
 #endif /*SYMBOL_DEFINED*/

@@ -16,6 +16,7 @@ static void _repl(Jay *jay) {
     if (jay->isInteractive) {
       print_atom(jay, out);
     }
+    jay->age++;
   }
 }
 

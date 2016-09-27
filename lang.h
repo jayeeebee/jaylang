@@ -29,6 +29,7 @@ typedef struct Jay {
   size_t charPoolSize;
 
   // atoms
+  int age;
   struct Atom *atoms;
   size_t atomsCount;
   AtomId unusedAtoms;

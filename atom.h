@@ -27,6 +27,7 @@ double atom_number(Jay*, AtomId);
 BuiltinFn atom_builtin(Jay*, AtomId);
 AtomId atom_param_names(Jay*, AtomId);
 AtomId atom_instructions(Jay*, AtomId);
+void atom_age(Jay*, AtomId);
 
 AtomId atom_intern_cons(Jay*);
 AtomId atom_intern_string(Jay*, StringId);
