@@ -50,7 +50,7 @@ int atoms_init(Jay *jay) {
   // basic atoms
   jay->nil = (AtomId) {.id = 0};
   _atom(jay, jay->nil)->type = ATOM_NIL;
-  jay->t = atom_intern_string(jay, string_intern(jay, "#t", strlen("#t")));
+  jay->t = atom_intern_string(jay, string_intern(jay, "#t"));
 
   return 0;
 }
@@ -81,19 +81,9 @@ AtomId atom_car(Jay *jay, AtomId atom) {
   return _atom(jay, atom)->car;
 }
 
-void atom_car_set(Jay *jay, AtomId atom, AtomId car) {
-  _check_type(jay, atom, ATOM_CONS);
-  _atom(jay, atom)->car = car;
-}
-
 AtomId atom_cdr(Jay *jay, AtomId atom) {
   _check_type(jay, atom, ATOM_CONS);
   return _atom(jay, atom)->cdr;
-}
-
-void atom_cdr_set(Jay *jay, AtomId atom, AtomId cdr) {
-  _check_type(jay, atom, ATOM_CONS);
-  _atom(jay, atom)->cdr = cdr;
 }
 
 StringId atom_string(Jay *jay, AtomId atom) {
@@ -156,8 +146,8 @@ static AtomId _atom_intern(Jay *jay, Atom atom) {
   return out;
 }
 
-AtomId atom_intern_cons(Jay *jay) {
-  Atom atom = {.type = ATOM_CONS, .car = jay->nil, .cdr = jay->nil};
+AtomId atom_intern_cons(Jay *jay, AtomId car, AtomId cdr) {
+  Atom atom = {.type = ATOM_CONS, .car = car, .cdr = cdr};
   return _atom_intern(jay, atom);
 }
 

@@ -3,11 +3,11 @@
 #include "symbol.h"
 
 int symbols_init(Jay *jay) {
-  jay->frameOfReference = atom_intern_cons(jay);
+  jay->frameOfReference = atom_intern_cons(jay, jay->nil, jay->nil);
   jay->symbolNames = jay->nil;
   jay->symbolValues = jay->nil;
-  symbol_intern(jay, string_intern(jay, "nil", strlen("nil")), jay->nil);
-  symbol_intern(jay, string_intern(jay, "#t", strlen("#t")), jay->t);
+  symbol_intern(jay, string_intern(jay, "nil"), jay->nil);
+  symbol_intern(jay, string_intern(jay, "#t"), jay->t);
   return 0;
 }
 
@@ -15,15 +15,8 @@ void symbols_free(Jay *jay) {
 }
 
 void stack_push(Jay *jay) {
-  AtomId cons = atom_intern_cons(jay);
-  atom_car_set(jay, cons, jay->frameOfReference);
-  atom_cdr_set(jay, cons, jay->symbolNames);
-  jay->symbolNames = cons;
-  
-  cons = atom_intern_cons(jay);
-  atom_car_set(jay, cons, jay->frameOfReference);
-  atom_cdr_set(jay, cons, jay->symbolValues);
-  jay->symbolValues = cons;
+  jay->symbolNames = atom_intern_cons(jay, jay->frameOfReference, jay->symbolNames);
+  jay->symbolValues = atom_intern_cons(jay, jay->frameOfReference, jay->symbolValues);
 }
 
 void stack_pop(Jay *jay) {
@@ -36,15 +29,8 @@ void stack_pop(Jay *jay) {
 }
 
 void symbol_intern(Jay *jay, StringId string, AtomId atom) {
-  AtomId names = atom_intern_cons(jay);
-  atom_car_set(jay, names, atom_intern_id(jay, string));
-  atom_cdr_set(jay, names, jay->symbolNames);
-  jay->symbolNames = names;
-  
-  AtomId values = atom_intern_cons(jay);
-  atom_car_set(jay, values, atom);
-  atom_cdr_set(jay, values, jay->symbolValues);
-  jay->symbolValues = values;
+  jay->symbolNames = atom_intern_cons(jay, atom_intern_id(jay, string), jay->symbolNames);
+  jay->symbolValues = atom_intern_cons(jay, atom, jay->symbolValues);
 }
 
 AtomId symbol_lookup(Jay *jay, StringId string) {

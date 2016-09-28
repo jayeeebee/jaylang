@@ -48,7 +48,8 @@ static int _string_lookup(Jay *jay, String str, size_t *index) {
   return 0;
 }
 
-StringId string_intern(Jay *jay, const char *chars, size_t length) {
+StringId string_intern(Jay *jay, const char *chars) {
+  size_t length = strlen(chars);
   String string = {
     .chars = chars,
     .length = length

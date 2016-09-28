@@ -8,7 +8,7 @@
 
 static AtomId _init(Jay *jay, const char *name, BuiltinFn builtinFn) {
   AtomId atom = atom_intern_builtin(jay, builtinFn);
-  symbol_intern(jay, string_intern(jay, name, strlen(name)), atom);
+  symbol_intern(jay, string_intern(jay, name), atom);
   return atom;
 }
 
@@ -351,11 +351,11 @@ AtomId read_token(Jay *jay, Token token) {
   case TOKEN_PCLOSE:
     LOG_FATAL("closing an unmatched paren");
   case TOKEN_STRING:
-    return atom_intern_string(jay, string_intern(jay, token.val, strlen(token.val)));
+    return atom_intern_string(jay, string_intern(jay, token.val));
   case TOKEN_NUMBER:
     return atom_intern_number(jay, atof(token.val));
   case TOKEN_ID:     
-    return atom_intern_id(jay, string_intern(jay, token.val, strlen(token.val)));
+    return atom_intern_id(jay, string_intern(jay, token.val));
   case TOKEN_EOF:
     LOG_FATAL("eof in middle of read");
   default:
@@ -368,18 +368,9 @@ static AtomId _read_list(Jay *jay) {
   if (token.type == TOKEN_PCLOSE) {
     return jay->nil;
   }
-  AtomId list = atom_intern_cons(jay);
-  AtomId curr = list;
-  do {
-    atom_car_set(jay, curr, read_token(jay, token));
-    token = io_read(jay);
-    if (token.type != TOKEN_PCLOSE) {
-      AtomId cdr = atom_intern_cons(jay);
-      atom_cdr_set(jay, curr, cdr);
-      curr = cdr;
-    }
-  } while (token.type != TOKEN_PCLOSE);
-  return list;
+  AtomId car = read_token(jay, token);
+  AtomId cdr = _read_list(jay);
+  return atom_intern_cons(jay, car, cdr);
 }
 
 AtomId read(Jay *jay, AtomId atom) {
