@@ -22,9 +22,14 @@ int builtins_init(Jay *jay) {
   _init(jay, "*", mul);
   _init(jay, "/", divide);
   _init(jay, "==", equal);
+  _init(jay, "while", whileFn);
   _init(jay, "if", ifFn);
   _init(jay, "or", orFn);
   _init(jay, "and", andFn);
+  _init(jay, "<", lt);
+  _init(jay, ">", gt);
+  _init(jay, "<=", lte);
+  _init(jay, ">=", gte);
   _init(jay, "set", set);
   _init(jay, "quit", quit);
   _init(jay, "defnc", defnc);
@@ -72,6 +77,18 @@ AtomId quote(Jay *jay, AtomId args) {
   return args;
 }
 
+AtomId whileFn(Jay *jay, AtomId args) {
+  AtomId out = jay->nil;
+  while (!is_nil(jay, eval(jay, atom_car(jay, args)))) {
+    AtomId instructions = atom_cdr(jay, args);
+    while (!is_nil(jay, instructions)) {
+      out = eval(jay, atom_car(jay, instructions));
+      instructions = atom_cdr(jay, instructions);
+    }
+  }
+  return out;
+}
+
 AtomId ifFn(Jay *jay, AtomId args) {
   AtomId found = eval(jay, atom_car(jay, args));
   AtomId out = atom_cdr(jay, args);
@@ -105,6 +122,30 @@ AtomId andFn(Jay *jay, AtomId args) {
     args = atom_cdr(jay, args);
   }
   return jay->t;
+}
+
+AtomId lt(Jay *jay, AtomId args) {
+  AtomId lhs = eval(jay, atom_car(jay, args));
+  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  return atom_number(jay, lhs) < atom_number(jay, rhs) ? jay->t : jay->nil;
+}
+
+AtomId gt(Jay *jay, AtomId args) {
+  AtomId lhs = eval(jay, atom_car(jay, args));
+  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  return atom_number(jay, lhs) > atom_number(jay, rhs) ? jay->t : jay->nil;
+}
+
+AtomId lte(Jay *jay, AtomId args) {
+  AtomId lhs = eval(jay, atom_car(jay, args));
+  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  return atom_number(jay, lhs) <= atom_number(jay, rhs) ? jay->t : jay->nil;
+}
+
+AtomId gte(Jay *jay, AtomId args) {
+  AtomId lhs = eval(jay, atom_car(jay, args));
+  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  return atom_number(jay, lhs) >= atom_number(jay, rhs) ? jay->t : jay->nil;
 }
 
 AtomId set(Jay *jay, AtomId args) {

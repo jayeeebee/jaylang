@@ -60,6 +60,7 @@ AtomId symbol_lookup(Jay *jay, StringId string) {
     names = atom_cdr(jay, names);
     values = atom_cdr(jay, values);
   }
+  LOG_FATAL("unable to find symbol with name %s", string_chars(jay, string));
   return jay->nil;
 }
 
