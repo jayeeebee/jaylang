@@ -18,6 +18,8 @@ AtomId divide(Jay*, AtomId);
 AtomId equal(Jay*, AtomId);
 AtomId quote(Jay*, AtomId);
 AtomId eval(Jay*, AtomId);
+AtomId eval_atom(Jay*, AtomId);
+AtomId eval_car(Jay*, AtomId);
 AtomId whileFn(Jay*, AtomId);
 AtomId ifFn(Jay*, AtomId);
 AtomId orFn(Jay*, AtomId);

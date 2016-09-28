@@ -12,7 +12,7 @@ static void _repl(Jay *jay) {
     if (token.type == TOKEN_EOF) {
       break;
     }
-    AtomId out = eval(jay, read_token(jay, token));
+    AtomId out = eval_atom(jay, read_token(jay, token));
     if (jay->isInteractive) {
       print_atom(jay, out);
     }

@@ -42,7 +42,7 @@ void builtins_free(Jay *jay) {
 AtomId add(Jay *jay, AtomId cons) {
   double sum = 0;
   while (!is_nil(jay, cons)) {
-    sum += atom_number(jay, eval(jay, atom_car(jay, cons)));
+    sum += atom_number(jay, eval_car(jay, cons));
     cons = atom_cdr(jay, cons);
   }
   return atom_intern_number(jay, sum);
@@ -51,38 +51,38 @@ AtomId add(Jay *jay, AtomId cons) {
 AtomId mul(Jay *jay, AtomId cons) {
   double tot = 1;
   while (!is_nil(jay, cons)) {
-    tot *= atom_number(jay, eval(jay, atom_car(jay, cons)));
+    tot *= atom_number(jay, eval_car(jay, cons));
     cons = atom_cdr(jay, cons);
   }
   return atom_intern_number(jay, tot);
 }
 
 AtomId sub(Jay *jay, AtomId cons) {
-  double diff = atom_number(jay, eval(jay, atom_car(jay, cons)));
+  double diff = atom_number(jay, eval_car(jay, cons));
   while (!is_nil(jay, (cons = atom_cdr(jay, cons)))) {
-    diff -= atom_number(jay, eval(jay, atom_car(jay, cons)));
+    diff -= atom_number(jay, eval_car(jay, cons));
   }
   return atom_intern_number(jay, diff);
 }
 
 AtomId divide(Jay *jay, AtomId cons) {
-  double val = atom_number(jay, eval(jay, atom_car(jay, cons)));
+  double val = atom_number(jay, eval_car(jay, cons));
   while (!is_nil(jay, (cons = atom_cdr(jay, cons)))) {
-    val /= atom_number(jay, eval(jay, atom_car(jay, cons)));
+    val /= atom_number(jay, eval_car(jay, cons));
   }
   return atom_intern_number(jay, val);
 }
 
 AtomId quote(Jay *jay, AtomId args) {
-  return args;
+  return atom_car(jay, args);
 }
 
 AtomId whileFn(Jay *jay, AtomId args) {
   AtomId out = jay->nil;
-  while (!is_nil(jay, eval(jay, atom_car(jay, args)))) {
+  while (!is_nil(jay, eval_car(jay, args))) {
     AtomId instructions = atom_cdr(jay, args);
     while (!is_nil(jay, instructions)) {
-      out = eval(jay, atom_car(jay, instructions));
+      out = eval_car(jay, instructions);
       instructions = atom_cdr(jay, instructions);
     }
   }
@@ -90,7 +90,7 @@ AtomId whileFn(Jay *jay, AtomId args) {
 }
 
 AtomId ifFn(Jay *jay, AtomId args) {
-  AtomId found = eval(jay, atom_car(jay, args));
+  AtomId found = eval_car(jay, args);
   AtomId out = atom_cdr(jay, args);
   if (is_nil(jay, found)) {
     out = atom_cdr(jay, out);
@@ -98,15 +98,15 @@ AtomId ifFn(Jay *jay, AtomId args) {
   if (is_nil(jay, out)) {
     return jay->nil;
   } else {
-    return eval(jay, atom_car(jay, out));
+    return eval_car(jay, out);
   }
 }
 
 AtomId orFn(Jay *jay, AtomId args) {
   while (!is_nil(jay, args)) {
-    AtomId found = eval(jay, atom_car(jay, args));
+    AtomId found = eval_car(jay, args);
     if (!is_nil(jay, found)) {
-      return jay->t;
+      return found;
     }
     args = atom_cdr(jay, args);
   }
@@ -114,43 +114,44 @@ AtomId orFn(Jay *jay, AtomId args) {
 }
 
 AtomId andFn(Jay *jay, AtomId args) {
+  AtomId found = jay->t;
   while (!is_nil(jay, args)) {
-    AtomId found = eval(jay, atom_car(jay, args));
+    found = eval_car(jay, args);
     if (is_nil(jay, found)) {
       return jay->nil;
     }
     args = atom_cdr(jay, args);
   }
-  return jay->t;
+  return found;
 }
 
 AtomId lt(Jay *jay, AtomId args) {
-  AtomId lhs = eval(jay, atom_car(jay, args));
-  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  AtomId lhs = eval_car(jay, args);
+  AtomId rhs = eval_car(jay, atom_cdr(jay, args));
   return atom_number(jay, lhs) < atom_number(jay, rhs) ? jay->t : jay->nil;
 }
 
 AtomId gt(Jay *jay, AtomId args) {
-  AtomId lhs = eval(jay, atom_car(jay, args));
-  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  AtomId lhs = eval_car(jay, args);
+  AtomId rhs = eval_car(jay, atom_cdr(jay, args));
   return atom_number(jay, lhs) > atom_number(jay, rhs) ? jay->t : jay->nil;
 }
 
 AtomId lte(Jay *jay, AtomId args) {
-  AtomId lhs = eval(jay, atom_car(jay, args));
-  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  AtomId lhs = eval_car(jay, args);
+  AtomId rhs = eval_car(jay, atom_cdr(jay, args));
   return atom_number(jay, lhs) <= atom_number(jay, rhs) ? jay->t : jay->nil;
 }
 
 AtomId gte(Jay *jay, AtomId args) {
-  AtomId lhs = eval(jay, atom_car(jay, args));
-  AtomId rhs = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  AtomId lhs = eval_car(jay, args);
+  AtomId rhs = eval_car(jay, atom_cdr(jay, args));
   return atom_number(jay, lhs) >= atom_number(jay, rhs) ? jay->t : jay->nil;
 }
 
 AtomId set(Jay *jay, AtomId args) {
   StringId name = atom_id(jay, atom_car(jay, args));
-  AtomId val = eval(jay, atom_car(jay, atom_cdr(jay, args)));
+  AtomId val = eval_car(jay, atom_cdr(jay, args));
   symbol_intern(jay, name, val);
   return val;
 }
@@ -158,7 +159,7 @@ AtomId set(Jay *jay, AtomId args) {
 AtomId quit(Jay *jay, AtomId args) {
   int exitCode = 0;
   if (!is_nil(jay, args)) {
-    AtomId out = eval(jay, atom_car(jay, args));
+    AtomId out = eval_car(jay, args);
     if (atom_type(jay, out) == ATOM_NUMBER) {
       exitCode = (int) atom_number(jay, out);
     }
@@ -185,14 +186,14 @@ static AtomId _eval_fnc(Jay *jay, AtomId car, AtomId cdr) {
   AtomId instructions = atom_instructions(jay, car);
   while (!is_nil(jay, cdr)) {
     StringId paramName = atom_id(jay, atom_car(jay, paramNames));
-    AtomId paramVal = eval(jay, atom_car(jay, cdr));
+    AtomId paramVal = eval_car(jay, cdr);
     symbol_intern(jay, paramName, paramVal);
     paramNames = atom_cdr(jay, paramNames);
     cdr = atom_cdr(jay, cdr);
   }
   AtomId out = jay->nil;
   while (!is_nil(jay, instructions)) {
-    out = eval(jay, atom_car(jay, instructions));
+    out = eval_car(jay, instructions);
     instructions = atom_cdr(jay, instructions);
   }
   stack_pop(jay);
@@ -205,7 +206,7 @@ static AtomId _eval_list(Jay *jay, AtomId car, AtomId cdr) {
   case ATOM_BUILTIN:
     return atom_builtin(jay, car)(jay, cdr);
   case ATOM_ID:
-    return _eval_list(jay, eval(jay, car), cdr);
+    return _eval_list(jay, symbol_lookup(jay, atom_id(jay, car)), cdr);
   case ATOM_FNC:
     return _eval_fnc(jay, car, cdr);
   case ATOM_CONS:
@@ -217,7 +218,7 @@ static AtomId _eval_list(Jay *jay, AtomId car, AtomId cdr) {
   }
 }
 
-AtomId eval(Jay *jay, AtomId atom) {
+AtomId eval_atom(Jay *jay, AtomId atom) {
   AtomType type = atom_type(jay, atom);
   switch (type) {
   case ATOM_CONS:
@@ -234,6 +235,15 @@ AtomId eval(Jay *jay, AtomId atom) {
     LOG_FATAL("not programmed to handle type %s", atomTypeNames[type]);
   }
 }
+
+AtomId eval_car(Jay *jay, AtomId atom) {
+  return eval_atom(jay, atom_car(jay, atom));
+}
+
+AtomId eval(Jay *jay, AtomId atom) {
+  return eval_atom(jay, eval_car(jay, atom));
+}
+
 
 /*
  * equal
@@ -259,9 +269,9 @@ static int _equal(Jay *jay, AtomId lhs, AtomId rhs) {
 }
 
 AtomId equal(Jay *jay, AtomId cons) {
-  AtomId lhs = eval(jay, atom_car(jay, cons));
+  AtomId lhs = eval_car(jay, cons);
   while (!is_nil(jay, cons = atom_cdr(jay, cons))) {
-    AtomId rhs = eval(jay, atom_car(jay, cons));
+    AtomId rhs = eval_car(jay, cons);
     if (!_equal(jay, lhs, rhs)) {
       return jay->nil;
     }
@@ -315,7 +325,7 @@ static void _print(Jay *jay, AtomId atom) {
 AtomId print(Jay *jay, AtomId atom) {
   AtomId out = jay->nil;
   while (!is_nil(jay, atom)) {
-    out = eval(jay, atom_car(jay, atom));
+    out = eval_car(jay, atom);
     _print(jay, out);
     atom = atom_cdr(jay, atom);
   }
